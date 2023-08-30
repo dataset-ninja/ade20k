@@ -1,72 +1,93 @@
-import supervisely as sly
-import os
-from dataset_tools.convert import unpack_if_archive
-import src.settings as s
-from urllib.parse import unquote, urlparse
-from supervisely.io.fs import get_file_name, get_file_size
-import shutil
+# https://groups.csail.mit.edu/vision/datasets/ADE20K/
 
+import glob
+import json
+import os
+import shutil
+from urllib.parse import unquote, urlparse
+
+import numpy as np
+import supervisely as sly
+from dataset_tools.convert import unpack_if_archive
+from dotenv import load_dotenv
+from supervisely.imaging.color import hex2rgb
+from supervisely.io.fs import (
+    file_exists,
+    get_file_ext,
+    get_file_name,
+    get_file_name_with_ext,
+    get_file_size,
+)
+from supervisely.io.json import load_json_file
 from tqdm import tqdm
 
-def download_dataset(teamfiles_dir: str) -> str:
-    """Use it for large datasets to convert them on the instance"""
-    api = sly.Api.from_env()
-    team_id = sly.env.team_id()
-    storage_dir = sly.app.get_data_dir()
+import src.settings as s
 
-    if isinstance(s.DOWNLOAD_ORIGINAL_URL, str):
-        parsed_url = urlparse(s.DOWNLOAD_ORIGINAL_URL)
-        file_name_with_ext = os.path.basename(parsed_url.path)
-        file_name_with_ext = unquote(file_name_with_ext)
-
-        sly.logger.info(f"Start unpacking archive '{file_name_with_ext}'...")
-        local_path = os.path.join(storage_dir, file_name_with_ext)
-        teamfiles_path = os.path.join(teamfiles_dir, file_name_with_ext)
-
-        fsize = api.file.get_directory_size(team_id, teamfiles_dir)
-        with tqdm(desc=f"Downloading '{file_name_with_ext}' to buffer...", total=fsize) as pbar:
-            api.file.download(team_id, teamfiles_path, local_path, progress_cb=pbar)
-        dataset_path = unpack_if_archive(local_path)
-
-    if isinstance(s.DOWNLOAD_ORIGINAL_URL, dict):
-        for file_name_with_ext, url in s.DOWNLOAD_ORIGINAL_URL.items():
-            local_path = os.path.join(storage_dir, file_name_with_ext)
-            teamfiles_path = os.path.join(teamfiles_dir, file_name_with_ext)
-
-            if not os.path.exists(get_file_name(local_path)):
-                fsize = api.file.get_directory_size(team_id, teamfiles_dir)
-                with tqdm(
-                    desc=f"Downloading '{file_name_with_ext}' to buffer...",
-                    total=fsize,
-                    unit="B",
-                    unit_scale=True,
-                ) as pbar:
-                    api.file.download(team_id, teamfiles_path, local_path, progress_cb=pbar)
-
-                sly.logger.info(f"Start unpacking archive '{file_name_with_ext}'...")
-                unpack_if_archive(local_path)
-            else:
-                sly.logger.info(
-                    f"Archive '{file_name_with_ext}' was already unpacked to '{os.path.join(storage_dir, get_file_name(file_name_with_ext))}'. Skipping..."
-                )
-
-        dataset_path = storage_dir
-    return dataset_path
 
 def convert_and_upload_supervisely_project(
     api: sly.Api, workspace_id: int, project_name: str
 ) -> sly.ProjectInfo:
-    ### Function should read local dataset and upload it to Supervisely project, then return project info.###
-    raise NotImplementedError("The converter should be implemented manually.")
+    # project_name = "ADE20K"
+    dataset_path = "APP_DATA/ADE20K_2021_17_01/images/ADE"
+    anns_ext = ".json"
+    images_ext = ".jpg"
+    batch_size = 30
 
-    # dataset_path = "/local/path/to/your/dataset" # general way
-    # dataset_path = download_dataset(teamfiles_dir) # for large datasets stored on instance
+    def create_ann(image_path):
+        global meta
+        labels = []
 
-    # ... some code here ...
+        ann_path = image_path.replace(images_ext, anns_ext)
+        if file_exists(ann_path):
+            with open(ann_path, encoding="ISO-8859-1") as f:
+                ann_data = json.load(f)["annotation"]
+            img_height = ann_data["imsize"][0]
+            img_wight = ann_data["imsize"][1]
+            scene_data = ann_data["scene"]
+            scene_value = ", ".join(scene_data)
+            scene = sly.Tag(tag_scene, value=scene_value)
+            for curr_object in ann_data["object"]:
+                class_name = curr_object["raw_name"]
+                obj_class = meta.get_obj_class(class_name)
+                if obj_class is None:
+                    obj_class = sly.ObjClass(class_name, sly.Polygon)
+                    meta = meta.add_obj_class(obj_class)
+                    api.project.update_meta(project.id, meta.to_json())
+                poly_data = curr_object["polygon"]
+                exterior = list(zip(poly_data["y"], poly_data["x"]))
+                if len(exterior) < 3:
+                    continue
+                polygon = sly.Polygon(exterior)
+                label_poly = sly.Label(polygon, obj_class)
+                labels.append(label_poly)
 
-    # sly.logger.info('Deleting temporary app storage files...')
-    # shutil.rmtree(storage_dir)
+        return sly.Annotation(img_size=(img_height, img_wight), labels=labels, img_tags=[scene])
 
-    # return project
+    obj_classes = []
+    tag_scene = sly.TagMeta("scene", sly.TagValueType.ANY_STRING)
 
+    project = api.project.create(workspace_id, project_name, change_name_if_conflict=True)
+    meta = sly.ProjectMeta(obj_classes=obj_classes, tag_metas=[tag_scene])
 
+    for ds_name in os.listdir(dataset_path):
+        dataset = api.dataset.create(project.id, ds_name, change_name_if_conflict=True)
+
+        ds_path = os.path.join(dataset_path, ds_name)
+
+        images_pathes = glob.glob(ds_path + "/*/*/*.jpg")
+
+        progress = sly.Progress("Create dataset {}".format(ds_name), len(images_pathes))
+
+        for img_pathes_batch in sly.batched(images_pathes, batch_size=batch_size):
+            img_names_batch = [
+                get_file_name_with_ext(image_path) for image_path in img_pathes_batch
+            ]
+
+            img_infos = api.image.upload_paths(dataset.id, img_names_batch, img_pathes_batch)
+            img_ids = [im_info.id for im_info in img_infos]
+
+            anns = [create_ann(image_path) for image_path in img_pathes_batch]
+            api.annotation.upload_anns(img_ids, anns)
+
+            progress.iters_done_report(len(img_names_batch))
+    return project

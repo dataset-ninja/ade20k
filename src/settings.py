@@ -13,50 +13,73 @@ from dataset_tools.templates import (
 ##################################
 # * Before uploading to instance #
 ##################################
-PROJECT_NAME: str = None
-PROJECT_NAME_FULL: str = None
+PROJECT_NAME: str = "ADE20K"
+PROJECT_NAME_FULL: str = "ADE20K"
 HIDE_DATASET = True  # set False when 100% sure about repo quality
 
 ##################################
 # * After uploading to instance ##
 ##################################
-LICENSE: License = None
-APPLICATIONS: List[Union[Industry, Domain, Research]] = None
-CATEGORY: Category = None
+LICENSE: License = License.Custom(url="https://groups.csail.mit.edu/vision/datasets/ADE20K/terms/")
+APPLICATIONS: List[Union[Industry, Domain, Research]] = [Industry.Robotics()]
+CATEGORY: Category = Category.Robotics()
 
-CV_TASKS: List[CVTask] = None
-ANNOTATION_TYPES: List[AnnotationType] = None
+CV_TASKS: List[CVTask] = [
+    CVTask.InstanceSegmentation(),
+    CVTask.SemanticSegmentation(),
+    CVTask.ObjectDetection(),
+]
+ANNOTATION_TYPES: List[AnnotationType.InstanceSegmentation()]
 
 RELEASE_DATE: Optional[str] = None  # e.g. "YYYY-MM-DD"
 if RELEASE_DATE is None:
-    RELEASE_YEAR: int = None
+    RELEASE_YEAR: int = 2019
 
-HOMEPAGE_URL: str = None
+HOMEPAGE_URL: str = "https://groups.csail.mit.edu/vision/datasets/ADE20K/"
 # e.g. "https://some.com/dataset/homepage"
 
 PREVIEW_IMAGE_ID: int = None
 # This should be filled AFTER uploading images to instance, just ID of any image.
 
-GITHUB_URL: str = None
+GITHUB_URL: str = "https://github.com/dataset-ninja/ade20k"
 # URL to GitHub repo on dataset ninja (e.g. "https://github.com/dataset-ninja/some-dataset")
 
 ##################################
 ### * Optional after uploading ###
 ##################################
-DOWNLOAD_ORIGINAL_URL: Optional[Union[str, dict]] = None
+DOWNLOAD_ORIGINAL_URL: Optional[
+    Union[str, dict]
+] = "https://groups.csail.mit.edu/vision/datasets/ADE20K/#Download"
 # Optional link for downloading original dataset (e.g. "https://some.com/dataset/download")
 
 CLASS2COLOR: Optional[Dict[str, List[str]]] = None
 # If specific colors for classes are needed, fill this dict (e.g. {"class1": [255, 0, 0], "class2": [0, 255, 0]})
 
 # If you have more than the one paper, put the most relatable link as the first element of the list
-PAPER: Optional[Union[str, List[str]]] = None
+PAPER: Optional[Union[str, List[str]]] = [
+    "http://people.csail.mit.edu/bzhou/publication/scene-parse-camera-ready.pdf",
+    "https://arxiv.org/abs/1608.05442",
+]
 BLOGPOST: Optional[Union[str, List[str]]] = None
 CITATION_URL: Optional[str] = None
-AUTHORS: Optional[List[str]] = None
+AUTHORS: Optional[List[str]] = [
+    "Bolei Zhou",
+    "Hang Zhao",
+    "Xavier Puig",
+    "Tete Xiao",
+    "Sanja Fidler",
+    "Adela Barriuso",
+    "Antonio Torralba",
+]
 
-ORGANIZATION_NAME: Optional[Union[str, List[str]]] = None
-ORGANIZATION_URL: Optional[Union[str, List[str]]] = None
+ORGANIZATION_NAME: Optional[Union[str, List[str]]] = [
+    "Massachusetts Institute of Technology, USA",
+    "University of Toronto, Canada",
+]
+ORGANIZATION_URL: Optional[Union[str, List[str]]] = [
+    "https://www.mit.edu/",
+    "https://www.utoronto.ca/",
+]
 
 # Set '__PRETEXT__' or '__POSTTEXT__' as a key with value:str to add custom text. e.g. SLYTAGSPLIT = {'__POSTTEXT__':'some text}
 SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = None
