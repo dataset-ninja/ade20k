@@ -23,18 +23,23 @@ from tqdm import tqdm
 import src.settings as s
 from dataset_tools.convert import unpack_if_archive
 
+# global meta
+obj_classes = []
+tag_scene = sly.TagMeta("scene", sly.TagValueType.ANY_STRING)
+meta = sly.ProjectMeta(obj_classes=obj_classes, tag_metas=[tag_scene])
+
 
 def convert_and_upload_supervisely_project(
     api: sly.Api, workspace_id: int, project_name: str
 ) -> sly.ProjectInfo:
     # project_name = "ADE20K"
-    dataset_path = "/mnt/d/datasetninja-raw/ade20k/ADE20K_2021_17_01/images/ADE"
+    dataset_path = "/home/alex/DATASETS/DONE/ADE20K/peixed351_26ec6b67/ADE20K_2021_17_01/images/ADE"
     anns_ext = ".json"
     images_ext = ".jpg"
     batch_size = 30
 
     def create_ann(image_path):
-        # global meta
+        global meta
         labels = []
 
         ann_path = image_path.replace(images_ext, anns_ext)
@@ -63,12 +68,12 @@ def convert_and_upload_supervisely_project(
 
         return sly.Annotation(img_size=(img_height, img_wight), labels=labels, img_tags=[scene])
 
-    obj_classes = []
-    tag_scene = sly.TagMeta("scene", sly.TagValueType.ANY_STRING)
+    # obj_classes = []
+    # tag_scene = sly.TagMeta("scene", sly.TagValueType.ANY_STRING)
 
     project = api.project.create(workspace_id, project_name, change_name_if_conflict=True)
-    global meta
-    meta = sly.ProjectMeta(obj_classes=obj_classes, tag_metas=[tag_scene])
+
+    # meta = sly.ProjectMeta(obj_classes=obj_classes, tag_metas=[tag_scene])
 
     for ds_name in os.listdir(dataset_path):
         dataset = api.dataset.create(project.id, ds_name, change_name_if_conflict=True)
