@@ -8,7 +8,6 @@ from urllib.parse import unquote, urlparse
 
 import numpy as np
 import supervisely as sly
-from dataset_tools.convert import unpack_if_archive
 from dotenv import load_dotenv
 from supervisely.imaging.color import hex2rgb
 from supervisely.io.fs import (
@@ -22,19 +21,20 @@ from supervisely.io.json import load_json_file
 from tqdm import tqdm
 
 import src.settings as s
+from dataset_tools.convert import unpack_if_archive
 
 
 def convert_and_upload_supervisely_project(
     api: sly.Api, workspace_id: int, project_name: str
 ) -> sly.ProjectInfo:
     # project_name = "ADE20K"
-    dataset_path = "APP_DATA/ADE20K_2021_17_01/images/ADE"
+    dataset_path = "/mnt/d/datasetninja-raw/ade20k/ADE20K_2021_17_01/images/ADE"
     anns_ext = ".json"
     images_ext = ".jpg"
     batch_size = 30
 
     def create_ann(image_path):
-        global meta
+        # global meta
         labels = []
 
         ann_path = image_path.replace(images_ext, anns_ext)
@@ -67,6 +67,7 @@ def convert_and_upload_supervisely_project(
     tag_scene = sly.TagMeta("scene", sly.TagValueType.ANY_STRING)
 
     project = api.project.create(workspace_id, project_name, change_name_if_conflict=True)
+    global meta
     meta = sly.ProjectMeta(obj_classes=obj_classes, tag_metas=[tag_scene])
 
     for ds_name in os.listdir(dataset_path):

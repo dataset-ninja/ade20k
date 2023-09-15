@@ -29,7 +29,7 @@ CV_TASKS: List[CVTask] = [
     CVTask.SemanticSegmentation(),
     CVTask.ObjectDetection(),
 ]
-ANNOTATION_TYPES: List[AnnotationType.InstanceSegmentation()]
+ANNOTATION_TYPES = [AnnotationType.InstanceSegmentation()]
 
 RELEASE_DATE: Optional[str] = None  # e.g. "YYYY-MM-DD"
 if RELEASE_DATE is None:
