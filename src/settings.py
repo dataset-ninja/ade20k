@@ -61,6 +61,9 @@ PAPER: Optional[Union[str, List[str]]] = [
     "https://arxiv.org/abs/1608.05442",
 ]
 BLOGPOST: Optional[Union[str, List[str]]] = None
+REPOSITORY: Optional[Union[str, List[str], Dict[str, str]]] = {"MIT Scene Parsing Benchmark":"http://sceneparsing.csail.mit.edu/"}
+
+
 CITATION_URL: Optional[str] = None
 AUTHORS: Optional[List[str]] = [
     "Bolei Zhou",
@@ -71,6 +74,7 @@ AUTHORS: Optional[List[str]] = [
     "Adela Barriuso",
     "Antonio Torralba",
 ]
+AUTHORS_CONTACTS: Optional[List[str]] = ["https://boleizhou.github.io/", "bolei@cs.ucla.edu", "ZhaoHang0124@gmail.com", "xavierpuig@meta.com"]
 
 ORGANIZATION_NAME: Optional[Union[str, List[str]]] = [
     "Massachusetts Institute of Technology, USA",
@@ -127,8 +131,10 @@ def get_settings():
     settings["class2color"] = CLASS2COLOR
     settings["paper"] = PAPER
     settings["blog"] = BLOGPOST
+    settings["repository"] = REPOSITORY
     settings["citation_url"] = CITATION_URL
     settings["authors"] = AUTHORS
+    settings["authors_contacts"] = AUTHORS_CONTACTS
     settings["organization_name"] = ORGANIZATION_NAME
     settings["organization_url"] = ORGANIZATION_URL
     settings["slytagsplit"] = SLYTAGSPLIT
