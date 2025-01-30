@@ -1,6 +1,6 @@
 Dataset **ADE20K** can be downloaded in [Supervisely format](https://developer.supervisely.com/api-references/supervisely-annotation-json-format):
 
- [Download](https://www.dropbox.com/scl/fi/dcrx5jyoqmhqp4lwy9h1p/ade20k-DatasetNinja.tar?rlkey=iwhkuspq8h5grnfdbvwz2yif6&dl=1)
+ [Download](https://assets.supervisely.com/remote/eyJsaW5rIjogImZzOi8vYXNzZXRzLzIwNzBfQURFMjBLL2FkZTIway1EYXRhc2V0TmluamEudGFyIiwgInNpZyI6ICIrUmJ4TjJ3eEVaWDJwUGx6SXQrWjhsU3lPVmZwcEV6SllscXYvMU13NEdrPSJ9)
 
 As an alternative, it can be downloaded with *dataset-tools* package:
 ``` bash
